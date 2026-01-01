@@ -527,18 +527,5 @@ project/
 
 ---
 
-## Contributing
 
-This is a study guide based on personal notes. Feel free to extend or adapt for your learning needs.
 
----
-
-## License
-
-Educational resource - free to use and share.
-
----
-
-## Acknowledgments
-
-Based on study notes covering LangChain framework, Generative AI concepts, and practical implementation patterns.
