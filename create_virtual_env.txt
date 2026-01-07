@@ -1,0 +1,25 @@
+UBUNTU
+
+# Create virtual environment
+python3 -m venv myenv
+
+# Activate virtual environment
+source myenv/bin/activate
+
+# Deactivate when done
+deactivate
+
+
+
+WINDOWS 
+# Install virtualenv (if not installed)
+pip install virtualenv
+
+# Create virtual environment
+virtualenv myenv
+
+# Activate virtual environment
+source myenv/bin/activate
+
+# Deactivate when done
+deactivate

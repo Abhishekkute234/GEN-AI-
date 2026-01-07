@@ -145,8 +145,8 @@ rules = [
 {r'\s*<br\s*/?>\s*': u'\n'}, # newline after a <br>
 {r'</(div)\s*>\s*': u'\n'}, # newline after </p> and </div> and <h1/>...
 {r'</(p|h\d)\s*>\s*': u'\n\n'}, # newline after </p> and </div> and <h1/>...
-{r'<head>.*<\s*(/head|body)[^>]*>': u''}, # remove <head> to </head>
-{r'<a\s+href="([^"]+)"[^>]*>._</a>': r'\1'}, # show links instead of texts
+{r'<head>._<\s_(/head|body)[^>]_>': u''}, # remove <head> to </head>
+{r'<a\s+href="([^"]+)"[^>]_>._</a>': r'\1'}, # show links instead of texts
 {r'[ \t]_<[^<]\_?/?>': u''}, # remove remaining tags
 {r'^\s+': u''} # remove spaces at the beginning
 ]
@@ -456,3 +456,371 @@ Comparison of Feature Extraction Techniques
 | | | |
 | | | _ Works only sentence and document level (it cannot work for individual word level) |
 +---------------------------------------+----------------------------------------------------------------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------------------+
+========================
+Dimensionality Reduction
+========================
+
+---
+
+```
+Principal Component Analysis (PCA)
+```
+
+Principle component analysis~(PCA) is the most popular technique in multivariate analysis and dimensionality reduction. PCA is a method to identify a subspace in which the data approximately lies. This means finding new variables that are uncorrelated and maximizing the variance to preserve as much variability as possible.
+
+Example of PCA on text dataset (20newsgroups) from tf-idf with 75000 features to 2000 components:
+
+.. code:: python
+
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    import numpy as np
+
+    def TFIDF(X_train, X_test, MAX_NB_WORDS=75000):
+        vectorizer_x = TfidfVectorizer(max_features=MAX_NB_WORDS)
+        X_train = vectorizer_x.fit_transform(X_train).toarray()
+        X_test = vectorizer_x.transform(X_test).toarray()
+        print("tf-idf with", str(np.array(X_train).shape[1]), "features")
+        return (X_train, X_test)
+
+
+    from sklearn.datasets import fetch_20newsgroups
+
+    newsgroups_train = fetch_20newsgroups(subset='train')
+    newsgroups_test = fetch_20newsgroups(subset='test')
+    X_train = newsgroups_train.data
+    X_test = newsgroups_test.data
+    y_train = newsgroups_train.target
+    y_test = newsgroups_test.target
+
+    X_train,X_test = TFIDF(X_train,X_test)
+
+    from sklearn.decomposition import PCA
+    pca = PCA(n_components=2000)
+    X_train_new = pca.fit_transform(X_train)
+    X_test_new = pca.transform(X_test)
+
+    print("train with old features: ",np.array(X_train).shape)
+    print("train with new features:" ,np.array(X_train_new).shape)
+
+    print("test with old features: ",np.array(X_test).shape)
+    print("test with new features:" ,np.array(X_test_new).shape)
+
+output:
+
+.. code:: python
+
+    tf-idf with 75000 features
+    train with old features:  (11314, 75000)
+    train with new features: (11314, 2000)
+    test with old features:  (7532, 75000)
+    test with new features: (7532, 2000)
+
+```
+Linear Discriminant Analysis (LDA)
+```
+
+Linear Discriminant Analysis (LDA) is another commonly used technique for data classification and dimensionality reduction. LDA is particularly helpful where the within-class frequencies are unequal and their performances have been evaluated on randomly generated test data. Class-dependent and class-independent transformation are two approaches in LDA where the ratio of between-class-variance to within-class-variance and the ratio of the overall-variance to within-class-variance are used respectively.
+
+.. code:: python
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+import numpy as np
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+
+def TFIDF(X_train, X_test, MAX_NB_WORDS=75000):
+vectorizer_x = TfidfVectorizer(max_features=MAX_NB_WORDS)
+X_train = vectorizer_x.fit_transform(X_train).toarray()
+X_test = vectorizer_x.transform(X_test).toarray()
+print("tf-idf with", str(np.array(X_train).shape[1]), "features")
+return (X_train, X_test)
+
+from sklearn.datasets import fetch_20newsgroups
+
+newsgroups_train = fetch_20newsgroups(subset='train')
+newsgroups_test = fetch_20newsgroups(subset='test')
+X_train = newsgroups_train.data
+X_test = newsgroups_test.data
+y_train = newsgroups_train.target
+y_test = newsgroups_test.target
+
+X_train,X_test = TFIDF(X_train,X_test)
+
+LDA = LinearDiscriminantAnalysis(n_components=15)
+X_train_new = LDA.fit(X_train,y_train)
+X_train_new = LDA.transform(X_train)
+X_test_new = LDA.transform(X_test)
+
+print("train with old features: ",np.array(X_train).shape)
+print("train with new features:" ,np.array(X_train_new).shape)
+
+print("test with old features: ",np.array(X_test).shape)
+print("test with new features:" ,np.array(X_test_new).shape)
+
+output:
+
+.. code::
+
+    tf-idf with 75000 features
+    train with old features:  (11314, 75000)
+    train with new features: (11314, 15)
+    test with old features:  (7532, 75000)
+    test with new features: (7532, 15)
+
+```
+Non-negative Matrix Factorization (NMF)
+```
+
+.. code:: python
+
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    import numpy as np
+    from sklearn.decomposition import NMF
+
+
+    def TFIDF(X_train, X_test, MAX_NB_WORDS=75000):
+        vectorizer_x = TfidfVectorizer(max_features=MAX_NB_WORDS)
+        X_train = vectorizer_x.fit_transform(X_train).toarray()
+        X_test = vectorizer_x.transform(X_test).toarray()
+        print("tf-idf with", str(np.array(X_train).shape[1]), "features")
+        return (X_train, X_test)
+
+
+    from sklearn.datasets import fetch_20newsgroups
+
+    newsgroups_train = fetch_20newsgroups(subset='train')
+    newsgroups_test = fetch_20newsgroups(subset='test')
+    X_train = newsgroups_train.data
+    X_test = newsgroups_test.data
+    y_train = newsgroups_train.target
+    y_test = newsgroups_test.target
+
+    X_train,X_test = TFIDF(X_train,X_test)
+
+
+
+    NMF_ = NMF(n_components=2000)
+    X_train_new = NMF_.fit(X_train)
+    X_train_new =  NMF_.transform(X_train)
+    X_test_new = NMF_.transform(X_test)
+
+    print("train with old features: ",np.array(X_train).shape)
+    print("train with new features:" ,np.array(X_train_new).shape)
+
+    print("test with old features: ",np.array(X_test).shape)
+    print("test with new features:" ,np.array(X_test_new))
+
+output:
+
+.. code::
+
+    tf-idf with 75000 features
+    train with old features:  (11314, 75000)
+    train with new features: (11314, 2000)
+    test with old features:  (7532, 75000)
+    test with new features: (7532, 2000)
+
+```
+Random Projection
+```
+
+Random projection or random feature is a dimensionality reduction technique mostly used for very large volume dataset or very high dimensional feature space. Text and document, especially with weighted feature extraction, can contain a huge number of underlying features.
+Many researchers addressed Random Projection for text data for text mining, text classification and/or dimensionality reduction.
+We start to review some random projection techniques.
+
+.. image:: docs/pic/Random%20Projection.png
+
+.. code:: python
+
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    import numpy as np
+
+    def TFIDF(X_train, X_test, MAX_NB_WORDS=75000):
+        vectorizer_x = TfidfVectorizer(max_features=MAX_NB_WORDS)
+        X_train = vectorizer_x.fit_transform(X_train).toarray()
+        X_test = vectorizer_x.transform(X_test).toarray()
+        print("tf-idf with", str(np.array(X_train).shape[1]), "features")
+        return (X_train, X_test)
+
+
+    from sklearn.datasets import fetch_20newsgroups
+
+    newsgroups_train = fetch_20newsgroups(subset='train')
+    newsgroups_test = fetch_20newsgroups(subset='test')
+    X_train = newsgroups_train.data
+    X_test = newsgroups_test.data
+    y_train = newsgroups_train.target
+    y_test = newsgroups_test.target
+
+    X_train,X_test = TFIDF(X_train,X_test)
+
+    from sklearn import random_projection
+
+    RandomProjection = random_projection.GaussianRandomProjection(n_components=2000)
+    X_train_new = RandomProjection.fit_transform(X_train)
+    X_test_new = RandomProjection.transform(X_test)
+
+    print("train with old features: ",np.array(X_train).shape)
+    print("train with new features:" ,np.array(X_train_new).shape)
+
+    print("test with old features: ",np.array(X_test).shape)
+    print("test with new features:" ,np.array(X_test_new).shape)
+
+output:
+
+.. code:: python
+
+    tf-idf with 75000 features
+    train with old features:  (11314, 75000)
+    train with new features: (11314, 2000)
+    test with old features:  (7532, 75000)
+    test with new features: (7532, 2000)
+
+```
+Autoencoder
+```
+
+Autoencoder is a neural network technique that is trained to attempt to map its input to its output. The autoencoder as dimensional reduction methods have achieved great success via the powerful reprehensibility of neural networks. The main idea is, one hidden layer between the input and output layers with fewer neurons can be used to reduce the dimension of feature space. Specially for texts, documents, and sequences that contains many features, autoencoder could help to process data faster and more efficiently.
+
+.. image:: docs/pic/Autoencoder.png
+
+.. code:: python
+
+from keras.layers import Input, Dense
+from keras.models import Model
+
+# this is the size of our encoded representations
+
+encoding_dim = 1500
+
+# this is our input placeholder
+
+input = Input(shape=(n,))
+
+# "encoded" is the encoded representation of the input
+
+encoded = Dense(encoding_dim, activation='relu')(input)
+
+# "decoded" is the lossy reconstruction of the input
+
+decoded = Dense(n, activation='sigmoid')(encoded)
+
+# this model maps an input to its reconstruction
+
+autoencoder = Model(input, decoded)
+
+# this model maps an input to its encoded representation
+
+encoder = Model(input, encoded)
+
+encoded_input = Input(shape=(encoding_dim,))
+
+# retrieve the last layer of the autoencoder model
+
+decoder_layer = autoencoder.layers[-1]
+
+# create the decoder model
+
+decoder = Model(encoded_input, decoder_layer(encoded_input))
+
+autoencoder.compile(optimizer='adadelta', loss='binary_crossentropy')
+
+Load data:
+
+.. code:: python
+
+autoencoder.fit(x_train, x_train,
+epochs=50,
+batch_size=256,
+shuffle=True,
+validation_data=(x_test, x_test))
+
+```
+T-distributed Stochastic Neighbor Embedding (T-SNE)
+```
+
+T-distributed Stochastic Neighbor Embedding (T-SNE) is a nonlinear dimensionality reduction technique for embedding high-dimensional data which is mostly used for visualization in a low-dimensional space. This approach is based on `G. Hinton and ST. Roweis <https://www.cs.toronto.edu/~fritz/absps/sne.pdf>`\_\_ . SNE works by converting the high dimensional Euclidean distances into conditional probabilities which represent similarities.
+
+`Example <http://scikit-learn.org/stable/modules/generated/sklearn.manifold.TSNE.html>`\_\_:
+
+.. code:: python
+
+import numpy as np
+from sklearn.manifold import TSNE
+X = np.array([[0, 0, 0], [0, 1, 1], [1, 0, 1], [1, 1, 1]])
+X_embedded = TSNE(n_components=2).fit_transform(X)
+X_embedded.shape
+
+Example of Glove and T-SNE for text:
+
+.. image:: docs/pic/TSNE.png
+
+===============================
+Text Classification Techniques
+===============================
+
+---
+
+```
+Rocchio classification
+```
+
+The first version of Rocchio algorithm is introduced by rocchio in 1971 to use relevance feedback in querying full-text databases. Since then many researchers have addressed and developed this technique for text and document classification. This method uses TF-IDF weights for each informative word instead of a set of Boolean features. Using a training set of documents, Rocchio's algorithm builds a prototype vector for each class which is an average vector over all training document vectors that belongs to a certain class. Then, it will assign each test document to a class with maximum similarity that between test document and each of the prototype vectors.
+
+When in nearest centroid classifier, we used for text as input data for classification with tf-idf vectors, this classifier is known as the Rocchio classifier.
+
+.. code:: python
+
+    from sklearn.neighbors.nearest_centroid import NearestCentroid
+    from sklearn.pipeline import Pipeline
+    from sklearn import metrics
+    from sklearn.feature_extraction.text import CountVectorizer
+    from sklearn.feature_extraction.text import TfidfTransformer
+    from sklearn.datasets import fetch_20newsgroups
+
+    newsgroups_train = fetch_20newsgroups(subset='train')
+    newsgroups_test = fetch_20newsgroups(subset='test')
+    X_train = newsgroups_train.data
+    X_test = newsgroups_test.data
+    y_train = newsgroups_train.target
+    y_test = newsgroups_test.target
+
+    text_clf = Pipeline([('vect', CountVectorizer()),
+                         ('tfidf', TfidfTransformer()),
+                         ('clf', NearestCentroid()),
+                         ])
+
+    text_clf.fit(X_train, y_train)
+
+
+    predicted = text_clf.predict(X_test)
+
+    print(metrics.classification_report(y_test, predicted))
+
+Output:
+
+.. code:: python
+
+                  precision    recall  f1-score   support
+
+              0       0.75      0.49      0.60       319
+              1       0.44      0.76      0.56       389
+              2       0.75      0.68      0.71       394
+              3       0.71      0.59      0.65       392
+              4       0.81      0.71      0.76       385
+              5       0.83      0.66      0.74       395
+              6       0.49      0.88      0.63       390
+              7       0.86      0.76      0.80       396
+              8       0.91      0.86      0.89       398
+              9       0.85      0.79      0.82       397
+             10       0.95      0.80      0.87       399
+             11       0.94      0.66      0.78       396
+             12       0.40      0.70      0.51       393
+             13       0.84      0.49      0.62       396
+             14       0.89      0.72      0.80       394
+             15       0.55      0.73      0.63       398
+             16       0.68      0.76      0.71       364
+             17       0.97      0.70      0.81       376
+             18       0.54      0.53      0.53       310
+             19       0.58      0.39      0.47       251
+
+    avg / total       0.74      0.69      0.70      7532
